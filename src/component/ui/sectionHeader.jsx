@@ -1,0 +1,14 @@
+import React, { useContext } from 'react'
+import { AppContext } from '../../context/AppContext';
+
+
+function SectionHeader() {
+  const {monthlyAllowee, cartLength} = useContext(AppContext)
+  return (
+    <h1 className="text-yellow-500 text-xl font-sans hover:text-2xl hover:text-red-400 font-extrabold underline decoration-green-400">
+      Welcome Brian, you have £{monthlyAllowee}, you buy {cartLength} item(s).
+    </h1>
+  );
+}
+
+export default SectionHeader;

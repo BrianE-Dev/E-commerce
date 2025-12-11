@@ -1,0 +1,8 @@
+.light{
+background-color: snow;
+color: rgb(48, 50, 53);
+}
+.dark{
+background-color: rgb(48, 50, 53);
+color: snow;
+}
