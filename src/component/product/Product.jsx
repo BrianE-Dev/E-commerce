@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import ProductCard from "../ui/ProductCard";
 import SearchFilter from "../ui/SearchFilter";
 import Skeleton from "@mui/material/Skeleton";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
+import { AppContext } from "../../context/AppContext";
+import axios from 'axios'
 
 function Product() {
   const initialProducts = [
@@ -48,16 +50,36 @@ function Product() {
   const [product, setProduct] = useState(initialProducts);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  //useEffect
+  const {user} = useContext(AppContext)
+  const token = localStorage.getItem("userToken")
+
+  const fetchProduct = async () => {
+    try {
+      const response = await axios.get("https://dummyjson.com/products", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Product from axios call", response.data)
+      setRealProduct(response.data.products)
+    } catch (error) {
+      console.error('Error:', error)
+      throw error;
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     setLoading(true);
-    fetch("https://dummyjson.com/products")
-      .then((res) => res.json())
-      .then((data) => {
-        setRealProduct(data.products);
-        console.log(data.products);
-      });
+    fetchProduct()
+    // fetch("https://dummyjson.com/products")
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     setRealProduct(response.data.products);
+    //     console.log(response.data.products);
+    //   });
+      
   }, []);
+
+
   const handleSearchChange = (term) => {
     setSearchTerm(term.toLowerCase());
   };
@@ -98,7 +120,8 @@ function Product() {
             No product(s) found
           </p>
         )}
-        </div><div>
+      </div>
+      <div>
         {loading && (
           <Grid container wrap="nowrap" col-4 className="">
             {product.map((item) => (
@@ -106,7 +129,7 @@ function Product() {
                 key={item.index}
                 sx={{ width: 210, marginRight: 0.5, my: 5 }}
               >
-                <Skeleton variant="rectangular" width={210} height={118}/>
+                <Skeleton variant="rectangular" width={210} height={118} />
 
                 <Box sx={{ pt: 0.5 }}>
                   <Skeleton />
