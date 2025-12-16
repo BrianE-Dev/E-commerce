@@ -1,56 +1,72 @@
 import React, { createContext, useEffect, useState } from "react";
 import { checkAuthStatus, logoutUser, register } from "../services/authService";
-import axios from 'axios'
+import axios from "axios";
+import { useCart } from "../hooks/useCart";
 
 const AppContext = createContext();
 //AppContext()
 const AppProvider = ({ children }) => {
+  const {getTotalItem} = useCart();
   const monthlyAllowee = 75000;
-  const [cartItems, setCartItems] = React.useState([]);
+  const [cartItems, setCartItems] = React.useState([getTotalItem]);
   let [cartLength, setCartLength] = useState(0);
   let [isLogin, setIsLogin] = useState(false);
   let [user, setUser] = useState(null);
+  let [searchWords, setSearchWords] = useState(null);
+
+   const updateCartLength = ()=>{
+      setCartItems(getTotalItem)
+  }
 
   const addToCart = (item) => {
     setCartItems([...cartItems, item]);
-    setCartLength(cartItems.length + 1);
+    setCartLength(cartItems.length);
   };
 
-  useEffect(()=>{
-        if(checkAuthStatus){
-            setIsLogin(true)
-        }
-  },[])
+  useEffect(() => {
+    if (checkAuthStatus) {
+      setIsLogin(true);
+    }
+  }, []);
 
   //handle register
   const handleRegister = (payload) => {
     register(payload)
-      ? (()=>{alert("Registration successful"); setIsLogin(true)})
+      ? () => {
+          alert("Registration successful");
+          setIsLogin(true);
+        }
       : alert("Account already exist, Login");
   };
 
-   //handle login
-    const handleLogin = async(payload) => {
-      // email & passwords
-      try {
-        const response = await axios.post('https://dummyjson.com/auth/login', payload);
-        if(response.status === 200){
-            const userData = response.data;
-            localStorage.setItem("userToken", userData.accessToken);
-            console.log(userData.accessToken);
-            setUser(userData);     
-            setIsLogin(true);
-
-        }
-      } catch (error) {
-        
+  //handle login
+  const handleLogin = async (payload) => {
+    // email & passwords
+    try {
+      const response = await axios.post(
+        "https://dummyjson.com/auth/login",
+        payload
+      );
+      if (response.status === 200) {
+        const userData = response.data;
+        localStorage.setItem("userToken", userData.accessToken);
+        // console.log(userData.accessToken);
+        setUser(userData);
+        setIsLogin(true);
       }
-    };
-
-    const handleLogout = ()=>{
-        logoutUser();
-        setIsLogin(false)
+    } catch (error) {
+      console.error(error)
     }
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    setIsLogin(false);
+  };
+
+  const updateSearch = (words) => {
+    searchWords(words);
+  };
 
   return (
     <AppContext.Provider
@@ -59,7 +75,14 @@ const AppProvider = ({ children }) => {
         cartItems,
         cartLength,
         addToCart,
-        handleRegister, isLogin, handleLogin, handleLogout, user
+        handleRegister,
+        isLogin,
+        handleLogin,
+        handleLogout,
+        user,
+        updateSearch,
+        searchWords,
+        updateCartLength
       }}
     >
       {children}
@@ -68,27 +91,3 @@ const AppProvider = ({ children }) => {
 };
 
 export { AppContext, AppProvider };
-
-
-// useEffect(async () => {
-//     setLoading(true);
-//       try {
-//       const response = await axios.get("https://dummyjson.com/products", )
-//       .then((res) => res.json())
-//       .then((data) => {
-//         setRealProduct(data.products);
-//         console.log(data.products);
-//       });
-//       if (response.status === 200) {
-//           const data = response.data;
-//           setRealProduct(data.products);
-//         console.log(data.products);
-//       }
-      
-//     } catch (error) {
-      
-//     }; if(!realProduct)(
-//       setLoading(false)
-//     )
-
-//   }, []);

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import ProductCard from "../ui/ProductCard";
 import SearchFilter from "../ui/SearchFilter";
 import Skeleton from "@mui/material/Skeleton";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import { AppContext } from "../../context/AppContext";
-import axios from 'axios'
+import axios from "axios";
+import { useCart } from "../../hooks/useCart";
 
 function Product() {
   const initialProducts = [
@@ -48,20 +49,22 @@ function Product() {
   ];
   const [realProduct, setRealProduct] = useState(initialProducts);
   const [product, setProduct] = useState(initialProducts);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm,] = useState("");
   const [loading, setLoading] = useState(false);
-  const {user} = useContext(AppContext)
-  const token = localStorage.getItem("userToken")
+  const { user, searchWords, updateSearch } = useContext(AppContext);
+  const searchRef = useRef(searchTerm);
+  const { addToCart, getCartItem, cartItems} = useCart()
+  const token = localStorage.getItem("userToken");
 
   const fetchProduct = async () => {
     try {
       const response = await axios.get("https://dummyjson.com/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Product from axios call", response.data)
-      setRealProduct(response.data.products)
+      console.log("Product from axios call", response.data);
+      setRealProduct(response.data.products);
     } catch (error) {
-      console.error('Error:', error)
+      console.error("Error:", error);
       throw error;
     }
     setLoading(false);
@@ -69,26 +72,28 @@ function Product() {
 
   useEffect(() => {
     setLoading(true);
-    fetchProduct()
-    // fetch("https://dummyjson.com/products")
-    //   .then((res) => res.json())
-    //   .then((data) => {
-    //     setRealProduct(response.data.products);
-    //     console.log(response.data.products);
-    //   });
-      
+    fetchProduct();
+    if (searchWords) {
+      setSearchTerm(searchWords)
+    }
+    
   }, []);
-
-
-  const handleSearchChange = (term) => {
+const handleSearchChange = (term) => {
     setSearchTerm(term.toLowerCase());
+    updateSearch(term.toLowerCase());
   };
+  
 
   const filteredProducts = product.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm) ||
       product.category.toLowerCase().includes(searchTerm)
   );
+  // const realFilteredProducts = realProduct.filter((product) => {
+  //   product.name.toLowerCase().includes(searchTerm) ||
+  //     product.category.toLocaleLowerCase().includes(searchTerm);
+  // });
+
 
   return (
     <div className="min-h-screen bg-transparent p-8">
@@ -96,6 +101,7 @@ function Product() {
       <SearchFilter
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
+        searchRef={searchRef}
       />
 
       <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -103,7 +109,11 @@ function Product() {
           filteredProducts.map((item) => (
             <ProductCard key={item.id} product={item} />
           ))
-        ) : (
+        //  )  : (realFilteredProducts.length > 0) ? (
+        //    realFilteredProducts.map((item) => (
+        //     <ProductCard key={item.id} product={item} />
+        //  ))
+         ) : (
           <p className="text-center text-gray-500 col-span-full">
             No product(s) found
           </p>
